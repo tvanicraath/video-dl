@@ -1,0 +1,39 @@
+#!/bin/bash
+
+url1=$1
+firstname=$(echo $url1 | cut -d"/" -f6 | tr '-' '_')
+echo "[flashx.tv] Downloading video webpage"
+curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url1 > /tmp/out1
+url2=$(cat /tmp/out1 | grep "allowfullscreen" |cut -d"\"" -f6)
+url3=$(echo $url2 | cut -d '&' -f1)
+echo "[flashx.tv] Downloading video info webpage"
+curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url3 > /tmp/out4
+url4=$(cat /tmp/out4 | grep "fxtv" | head -n +1 | cut -d"\"" -f2)
+echo "[flashx.tv] Extracting video information"
+curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url4 > /tmp/out5
+url5=$( cat /tmp/out5 | grep "nuevoplayer" | tr ' ' '\n' | grep "data" | cut -d"=" -f3- | cut -d"\"" -f1)
+echo "[flashx.tv] Fetching video url"
+curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url5 > /tmp/out6
+url6=$( cat /tmp/out6 | grep "file" | head -n +1 | cut -d">" -f2 | cut -d"<" -f1)
+while [ "$url6" == "" ]; do
+	echo "[flashx.tv] Authentication Failed. Trying again"
+	echo "[flashx.tv] Close Firefox after video starts playing"
+	firefox -new-window $url4
+	curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url4 > /tmp/out5
+	url5=$( cat /tmp/out5 | grep "nuevoplayer" | tr ' ' '\n' | grep "data" | cut -d"=" -f3- | cut -d"\"" -f1)
+	echo "[flashx.tv] Fetching video url"
+	curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30" $url5 > /tmp/out6
+	url6=$( cat /tmp/out6 | grep "file" | head -n +1 | cut -d">" -f2 | cut -d"<" -f1)
+done
+echo "[flashx.tv] Fetched video url: [ $url6 ]"
+lastname=$(echo $url6 | rev | cut -d"." -f1 | rev)
+name=$firstname.$lastname
+echo "[flashx.tv] Saving to file ./$name"
+wget -c $url6 -O $name --progress=bar:force 2>&1 | tail -f -n +8
+
+#url1: http://flashx.tv/video/YH38ODRK7HD9/Now-You-See-Me-2013-720p-TS
+#url2: http://play.flashx.tv/player/embed.php?vid=739797&width=620&height=400
+#url3: http://play.flashx.tv/player/embed.php?vid=739797
+#url4: http://play.flashx.tv/player/fxtv.php?ocfr27HLgWxxtbzFv6mBfXKM79zY5qF2b5aomdzXoqCh2rWmq6JfrJ7J4NTn2nZtn8mq1NjXaXJvmd2kp9Rva23Kqqitpm1tcsqv16nXbF+a2+zi5N6asnbf3eY=
+#url5: http://play.flashx.tv/nuevo/player/fx.php?str=4MfrzrW/wJmwtby4w53AqrE=
+#url6: http://fx025.flashx.tv/dl/bf875ddc62fbc6d08e2184aea38c0b42/51be330a/2013/06/14/1371158757e7441.flv

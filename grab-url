@@ -1,0 +1,58 @@
+#!/bin/bash
+location_of_videos="/home/rachit/Videos"
+location_of_videodl="/home/rachit/projects/video-dl"
+videodl=$location_of_videodl"/video-dl"
+tahuko=$location_of_videodl"/video-dl_files/tahuko"
+
+sleep 1		# to allow released of any pressed hotkey, alt+d 's alt in my case
+xdotool key --window getactivewindow function+F6	#select url bar
+sleep 0.5
+xdotool key --window getactivewindow ctrl+c	#copy url	
+sleep 0.2
+xdotool key --window getactivewindow Right	#deselect text
+sleep 1.5
+xdotool key --window getactivewindow F6		#back to body
+sleep 1
+
+url=$(xclip -o)
+
+src=${url%%&*}		#removes all &s
+
+url=${url##*//}
+url=${url%%/*}		#url=name of website
+#notify-send $url
+
+cd $location_of_videos
+
+if [ "$url" == "www.facebook.com" ]; then
+	sleep 0.1	
+	xdotool key --window getactivewindow ctrl+u	#see sourcecode
+	sleep 1
+	
+	xdotool key --window getactivewindow ctrl+a	#seleect all
+	sleep 0.2
+	
+	xdotool key --window getactivewindow ctrl+c
+	sleep 0.2
+	
+	xdotool key --window getactivewindow ctrl+w
+	
+	source=$(xclip -o)
+	encoded=$(echo $source | sed 's/\[\[/\n/g' | grep "params" | tail -n -1 | cut -d"\"" -f4 | sed 's/\\u0025/%/g' )	#get source block
+	decoded=$(python -c "import urllib, sys; print urllib.unquote(sys.argv[1])" $encoded)					#convert utf8 encoded url to js encoded url
+	src=$(echo $decoded | sed 's/,/,\n/g' | grep "sd_src" | cut -d"\"" -f4 | sed 's/\\\//\//g')				#remove escape sequences
+	notify-send "[fb] downloading started"
+	wget -c $src
+	notify-send "[fb] done"
+
+elif [ "$url" == "www.tahuko.com" ]; then
+	notify-send "called tahuko with $src"
+	$tahuko $src
+	notify-send "done!"
+
+else
+	notify-send "called video-dl with $src"
+	$videodl $src
+	notify-send  "[video-dl] done"
+	
+fi

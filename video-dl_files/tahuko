@@ -1,0 +1,53 @@
+#!/bin/bash
+echo $1
+curl $1 > /tmp/out
+#flashurl=$(cat /tmp/out | grep "flashvars" | tail -n +2 | cut -d "=" -f3 | cut -d "'" -f1 | sed 's/ /%20/g')
+#name=$(echo $flashurl | rev | cut -d"/" -f1 | rev | sed 's/%20/_/g')
+#curl -# $flashurl > /tmp/out1
+#swfextract -m /tmp/out1 -o $name.mp3
+
+
+#check for old version, i.e .swf file
+cat /tmp/out | grep "flashvars" | tail -n +2 > /tmp/out1
+version=$(wc -l /tmp/out1 | cut -d" " -f1)
+#if version=0, ==> new version, not swf
+##else old version
+
+
+if [ "$version" == "0" ]; then
+	echo "new"
+	cat /tmp/out | grep "soundFile" > /tmp/out2
+	while read line           
+	do
+		line=${line##*:\"} 
+		line=${line%\"*}
+		url=$(python /home/rachit/hacks/dl_files/soundFile_decoder.py $line)
+		name=${url##*/}
+                name=$(echo $name | sed 's/ /_/g')
+		url=$(echo $url | sed 's/ /%20/g')
+		curl -# $url > $name
+	done </tmp/out2
+
+else
+	echo "old"
+	while read line
+	do
+		line=${line##*=}
+		line=${line%\'*}
+		line=${line%\"*}
+		line=$(echo $line | sed 's/ /%20/g')
+		ext=${line##*.}
+                name=$(echo ${line##*/} | sed 's/%20/_/g')
+                name=${name%.*}
+
+		if [ "$ext" == "mp3" ]; then
+			curl $line > $name.mp3
+		else
+			curl -# $line > /tmp/out2
+			swfextract -m /tmp/out2 -o $name.mp3
+		fi
+		echo $name
+
+	done </tmp/out1
+	
+fi

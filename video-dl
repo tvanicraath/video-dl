@@ -1,0 +1,65 @@
+#!/bin/bash
+location_of_youtubedl="youtube-dl"
+location_of_videodl_files="/home/rachit/projects/video-dl/video-dl_files/"
+
+flashx=$location_of_videodl_files"flashx.tv"
+tubemotion=$location_of_videodl_files"tubemotion"
+tahuko=$location_of_videodl_files"tahuko"
+
+url=$1
+prefix=${url%%:/*}
+url=${url%%&*}
+
+if [ "$prefix" == "http" ] || [ "$prefix" == "https" ]; then
+	#isurl
+	sitename=$(echo $url | cut -d"/" -f3)
+	echo $sitename
+	if [ "$sitename" == "www.youtube.com" ] || [ "$sitename" == "youtube.com" ];then
+		$location_of_youtubedl -t $url
+	fi
+
+        if [ "$sitename" == "www.flashx.tv" ] || [ "$sitename" == "flashx.tv" ];then
+	        $flashx $url
+        fi
+
+        if [ "$sitename" == "www.tubemotion.com" ] || [ "$sitename" == "tubemotion.com" ];then
+                $tubemotion $url
+        fi
+	
+	if [ "$sitename" == "www.tahuko.com" ] || [ "$sitename" == "tahuko.com" ]; then
+		$tahuko $url
+	fi
+
+
+
+else
+	sitename=$prefix
+	if [ "$sitename" == "youtube" ]; then
+		url="http://youtube.com/watch?v=$2"
+		echo "[youtube] $url"
+		$location_of_youtubedl -t $url
+	fi
+
+        if [ "$sitename" == "flashx" ] || [ "$sitename" == "flashx.tv" ]; then
+                url="http://flashx.tv/video/$2"
+                echo "[flashx.tv] $url"
+	        $flashx $url
+        fi
+
+        if [ "$sitename" == "tubemotion" ]; then
+                url="http://www.tubemotion.com/media/$2"
+                echo "[tubemotion] $url"
+        	$tubemotion -t $url
+        fi
+
+        if [ "$sitename" == "tahuko" ]; then
+                url="http://www.tahuko.com/?p="$2
+                echo "[tahuko] $url"
+        	$tahuko -t $url
+        fi
+
+
+fi
+
+
+#echo $prefix

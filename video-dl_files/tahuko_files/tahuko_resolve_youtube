@@ -1,0 +1,14 @@
+#!/bin/bash
+param=$(date +%s)
+param="/tmp/"$param"_out"
+root="/home/rachit/hacks/dl_files/tahuko_files/"
+
+cat $root"links_db" | grep "youtube" > $param
+
+while read line
+do
+id=$(echo $line | cut -d" " -f1)
+url="http://tahuko.com/?p="$id
+echo $url
+
+done <$param

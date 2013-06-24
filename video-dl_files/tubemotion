@@ -1,0 +1,10 @@
+#!/bin/bash
+url=$1
+id=$(echo $url | cut -d"/" -f5)
+xml="http://www.tubemotion.com/flv_player/data/playerConfigEmbed/$id.xml"
+echo $xml
+parameter=$(date +%s)
+echo $parameter
+curl -# $xml > /tmp/tubemotion_$parameter
+link=$(cat /tmp/tubemotion_$parameter | grep "video SD" | cut -d "\"" -f2)
+echo $link

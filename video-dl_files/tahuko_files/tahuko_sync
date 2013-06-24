@@ -1,0 +1,26 @@
+#!/bin/bash
+param=$(date +%s)
+param="/tmp/"$param"_out"
+
+curl -# "http://tahuko.com/?page_id=13999" -o $param
+cat $param | grep "lcp_catlist" | sed 's/>/>\n/g' | grep "href" | cut -d "\"" -f2 | cut -d"=" -f2 > $param"1"
+
+
+while read id
+do
+	ifthere=$(cat ./links_db | grep $id | wc -l)
+	if [ $ifthere == 0 ]; then
+		echo "http://tahuko.com/?p=$id" >> $param"_tobedone"
+	fi
+done <$param"1"
+
+ifthere=$(cat $param"_tobedone" | wc -l)
+if [ $ifthere -gt 0 ]; then
+	echo "calling tahuko_getlinks with following set of links: "$param"_tobedone"
+	/home/rachit/hacks/dl_files/tahuko_files/tahuko_getlink $param"_tobedone" >> /home/rachit/hacks/dl_files/tahuko_files/links_db
+fi
+
+
+rm $param
+rm $param"1"
+
