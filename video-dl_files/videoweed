@@ -1,0 +1,44 @@
+#!/usr/bin/python
+
+import sys, urllib,urllib2, os, time, re, unicodedata
+from urlgrabber.grabber import URLGrabber
+import urlgrabber, urlgrabber.progress
+useragent=" Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.110 Safari/537.36"
+
+def fetchdata(url):
+	req=urllib2.Request(url)
+	req.add_header('User-Agent', useragent)
+	req.add_header("Connection", "keep-alive")
+	resp=urllib2.urlopen(req)
+	data=resp.read().decode('latin-1')
+	resp.close()
+	return data
+
+url=sys.argv[1]
+filename=sys.argv[2]
+
+site=url.split('/')[2]
+if(site!="embed.videoweed.es"):
+	data=fetchdata(url)
+	player_url=re.compile('embed\.php\?v=(.+?)&').findall(data)[0]
+	player_url="http://embed.videoweed.es/embed.php?v="+player_url
+	print player_url
+else:
+	player_url=url
+
+
+data=fetchdata(player_url)
+videoweed_file=re.compile('flashvars.file="(.+?)"').findall(data)[0]
+videoweed_filekey=re.compile('flashvars.filekey="(.+?)"').findall(data)[0]
+videoweed_filekey=videoweed_filekey.replace(".","%2E").replace("-","%2D")
+
+
+url2="http://www.videoweed.es/api/player.api.php?user=undefined&codes=undefined&pass=undefined&file="+videoweed_file+"&key="+videoweed_filekey
+
+data=fetchdata(url2)
+source_url=re.compile('url=(.+?)&').findall(data)[0]
+print source_url
+
+prog = urlgrabber.progress.text_progress_meter()
+#urlgrabber.urlgrab(source_url,filename,progress_obj=prog,reget='simple',text="[videoweed] ")
+urlgrabber.urlgrab(source_url,filename)

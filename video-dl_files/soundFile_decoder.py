@@ -35,6 +35,6 @@ def decode(source):
     return "".join(chars)
 
 # http://www.mabd.se/?p=682
-test = sys.argv[1]
-print(decode(test))
+#test = sys.argv[1]
+print(decode("7A2113827D473A718C78693B856C112BFADE81DD"))
 
